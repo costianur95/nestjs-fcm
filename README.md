@@ -55,6 +55,7 @@ export class SampleService {
     await this.fcmService.sendNotification([
       'device_id_1',
       'device_id_2',
+      ]
       payload,
       silent,
     ]);

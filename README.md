@@ -16,12 +16,8 @@
 
 ### Installation
 
-1. Clone the repo
-2. Run npm/yarn install
-
 ```bash
-cd nestjs-fcm
-npm install
+npm install --save nestjs-fcm
 ```
 
 ### FcmModule

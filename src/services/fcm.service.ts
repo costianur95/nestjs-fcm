@@ -50,4 +50,35 @@ export class FcmService {
     }
     return result;
   }
+
+  async sendNotificationV1(
+    deviceIds: Array<string>,
+    payload: firebaseAdmin.messaging.MessagingPayload,
+  ) {
+    if (deviceIds.length == 0) {
+      throw new Error('You provide an empty device ids list!');
+    }
+
+    if (firebaseAdmin.apps.length === 0) {
+      firebaseAdmin.initializeApp({
+        credential: firebaseAdmin.credential.cert(
+          this.fcmOptionsProvider.firebaseSpecsPath,
+        ),
+      });
+    }
+
+    let result = null;
+    try {
+      result = await firebaseAdmin
+        .messaging()
+        .sendMulticast({
+          tokens: deviceIds,
+          data: payload.data
+        });
+    } catch (error) {
+      this.logger.error(error.message, error.stackTrace, 'nestjs-fcm');
+      throw error;
+    }
+    return result;
+  }
 }

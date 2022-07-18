@@ -15,6 +15,7 @@ export class FcmService {
     deviceIds: Array<string>,
     payload: firebaseAdmin.messaging.MessagingPayload,
     silent: boolean,
+    imageUrl?: string
   ) {
     if (deviceIds.length == 0) {
       throw new Error('You provide an empty device ids list!');
@@ -28,22 +29,37 @@ export class FcmService {
       });
     }
 
-    const options = {
-      priority: 'high',
-      timeToLive: 60 * 60 * 24,
-    };
-
-    const optionsSilent = {
-      priority: 'high',
-      timeToLive: 60 * 60 * 24,
-      content_available: true,
-    };
+    const body: firebaseAdmin.messaging.MulticastMessage = {
+      tokens: deviceIds,
+      data: payload?.data,
+      notification: {
+        title: payload?.notification?.title,
+        body: payload?.notification?.body,
+        imageUrl
+      },
+      apns: {
+        payload: {
+          aps: {
+            sound: payload?.notification?.sound,
+            contentAvailable: silent ? true : false,
+            mutableContent: true
+          }
+        },
+        fcmOptions: {
+         imageUrl
+        }
+      },
+      android: {
+        priority: 'high',
+        ttl: 60 * 60 * 24,
+      }
+    }
 
     let result = null;
     try {
       result = await firebaseAdmin
         .messaging()
-        .sendToDevice(deviceIds, payload, silent ? optionsSilent : options);
+        .sendMulticast(body, false)
     } catch (error) {
       this.logger.error(error.message, error.stackTrace, 'nestjs-fcm');
       throw error;

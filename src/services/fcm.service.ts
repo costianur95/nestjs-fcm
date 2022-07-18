@@ -52,6 +52,9 @@ export class FcmService {
       android: {
         priority: 'high',
         ttl: 60 * 60 * 24,
+        notification: {
+          sound: payload?.notification?.sound
+        }
       }
     }
 

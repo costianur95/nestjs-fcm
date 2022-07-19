@@ -15,6 +15,7 @@ export class FcmService {
     deviceIds: Array<string>,
     payload: firebaseAdmin.messaging.MessagingPayload,
     silent: boolean,
+    imageUrl?: string
   ) {
     if (deviceIds.length == 0) {
       throw new Error('You provide an empty device ids list!');
@@ -28,26 +29,62 @@ export class FcmService {
       });
     }
 
-    const options = {
-      priority: 'high',
-      timeToLive: 60 * 60 * 24,
-    };
-
-    const optionsSilent = {
-      priority: 'high',
-      timeToLive: 60 * 60 * 24,
-      content_available: true,
-    };
-
-    let result = null;
-    try {
-      result = await firebaseAdmin
-        .messaging()
-        .sendToDevice(deviceIds, payload, silent ? optionsSilent : options);
-    } catch (error) {
-      this.logger.error(error.message, error.stackTrace, 'nestjs-fcm');
-      throw error;
+    const body: firebaseAdmin.messaging.MulticastMessage = {
+      tokens: deviceIds,
+      data: payload?.data,
+      notification: {
+        title: payload?.notification?.title,
+        body: payload?.notification?.body,
+        imageUrl
+      },
+      apns: {
+        payload: {
+          aps: {
+            sound: payload?.notification?.sound,
+            contentAvailable: silent ? true : false,
+            mutableContent: true
+          }
+        },
+        fcmOptions: {
+         imageUrl
+        }
+      },
+      android: {
+        priority: 'high',
+        ttl: 60 * 60 * 24,
+        notification: {
+          sound: payload?.notification?.sound
+        }
+      }
     }
-    return result;
+
+    let result = null
+    let failureCount = 0
+    let successCount = 0
+    const failedDeviceIds = []
+
+    while(deviceIds.length) {
+      try {
+        result = await firebaseAdmin
+          .messaging()
+          .sendMulticast({...body, tokens: deviceIds.splice(0,500)}, false)
+          if (result.failureCount > 0) {
+            const failedTokens = [];
+            result.responses.forEach((resp, id) => {
+              if (!resp.success) {
+                failedTokens.push(deviceIds[id]);
+              }
+            });
+            failedDeviceIds.push(...failedTokens)
+          }
+          failureCount += result.failureCount;
+          successCount += result.successCount;
+      } catch (error) {
+        this.logger.error(error.message, error.stackTrace, 'nestjs-fcm');
+        throw error;
+      }
+ 
+    }
+    return {failureCount, successCount, failedDeviceIds};
   }
 }

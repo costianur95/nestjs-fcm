@@ -1,6 +1,6 @@
 {
   "name": "nestjs-fcm",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "NestJS npm package starter",
   "author": "Razvan Costianu <costianur@gmail.com>",
   "license": "MIT",

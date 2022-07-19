@@ -58,15 +58,33 @@ export class FcmService {
       }
     }
 
-    let result = null;
-    try {
-      result = await firebaseAdmin
-        .messaging()
-        .sendMulticast(body, false)
-    } catch (error) {
-      this.logger.error(error.message, error.stackTrace, 'nestjs-fcm');
-      throw error;
+    let result = null
+    let failureCount = 0
+    let successCount = 0
+    const failedDeviceIds = []
+
+    while(deviceIds.length) {
+      try {
+        result = await firebaseAdmin
+          .messaging()
+          .sendMulticast({...body, tokens: deviceIds.splice(0,500)}, false)
+          if (result.failureCount > 0) {
+            const failedTokens = [];
+            result.responses.forEach((resp, id) => {
+              if (!resp.success) {
+                failedTokens.push(deviceIds[id]);
+              }
+            });
+            failedDeviceIds.push(...failedTokens)
+          }
+          failureCount += result.failureCount;
+          successCount += result.successCount;
+      } catch (error) {
+        this.logger.error(error.message, error.stackTrace, 'nestjs-fcm');
+        throw error;
+      }
+ 
     }
-    return result;
+    return {failureCount, successCount, failedDeviceIds};
   }
 }

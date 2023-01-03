@@ -55,7 +55,7 @@
     "ts-jest": "^26.5.1",
     "ts-node": "8.1.0",
     "tsc-watch": "2.2.1",
-    "tsconfig-paths": "3.8.0",
+    "tsconfig-paths": "3.10.1",
     "tslint": "5.16.0",
     "typescript": "^3.7"
   },

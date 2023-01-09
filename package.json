@@ -36,7 +36,7 @@
     "@nestjs/common": "^7.6.12"
   },
   "dependencies": {
-    "firebase-admin": "^9.5.0",
+    "firebase-admin": "^11.4.1",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^6.5.5"
   },
